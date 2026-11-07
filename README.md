@@ -17,17 +17,18 @@ O Shirokai Crates não precisa ser instalado no cliente. O cliente continua prec
 
 ## Instalação
 
-**Arquivo para instalar: `shirokai-crates-0.2.0.jar`.** Não instale `*-sources.jar` nem o ZIP do projeto.
+**Arquivo para instalar: `shirokai-crates-0.2.1.jar`.** Não instale `*-sources.jar` nem o ZIP do projeto.
 
 Para atualizar, pare o servidor, retire de `mods/` os JARs anteriores do Shirokai Crates (inclusive `shirokai-crates-0.1.0-sources.jar`, caso esteja lá) e coloque somente o novo JAR executável. Preserve `config/shirokaicrates/`, o mundo e os dados de jogadores. Não há migração nem redefinição de chaves, registros ou recompensas nesta correção.
 
+A versão 0.2.1 permite abrir o preview batendo no bloco com a mão principal vazia e mostra modelos nativos dos Pokémon no preview, roleta e pendências. Veja [detalhes e testes](docs/PREVIA-MODELOS-0.2.1.md).
 A versão 0.2.0 adiciona roleta de três linhas, partículas nos blocos, porcentagens diretas e políticas de IVs. Veja [configuração e exemplos](docs/CONFIGURACAO-0.2.0.md).
 A versão 0.1.3 corrige a persistência no Windows e informa no chat falhas ao registrar ou remover blocos.
 A versão 0.1.2 adiciona `/crates create <id>` para gerar caixas editáveis pelo jogo.
 A versão 0.1.1 impede que arquivos de fontes sejam identificados como mods e valida o conteúdo dos JARs durante `build`. Detalhes da causa e da validação estão em [docs/CORRECAO-0.1.1.md](docs/CORRECAO-0.1.1.md).
 
 1. Instale as dependências da tabela no servidor Fabric 1.21.1.
-2. Coloque `build/libs/shirokai-crates-0.2.0.jar` em `mods/`.
+2. Coloque `build/libs/shirokai-crates-0.2.1.jar` em `mods/`.
 3. Inicie o servidor. Na primeira inicialização, os exemplos são criados em `config/shirokaicrates/`.
 4. Edite os JSONs, execute `/crates reload`, coloque um bloco, olhe para ele e execute `/crates setblock shiny1`.
 5. Entregue uma chave com `/crates givekey Jogador shiny1 1`.

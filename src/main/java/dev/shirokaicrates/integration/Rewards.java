@@ -41,6 +41,7 @@ public final class Rewards {
                     if(properties.getAbility()!=null && com.cobblemon.mod.common.api.abilities.Abilities.get(properties.getAbility())==null)
                         throw new IllegalArgumentException("Habilidade inválida");
                     properties.create(null);
+                    PokemonIcons.icon(reward);
                 }
                 case currency -> { if(EconomyService.instance().currencies().currency(Key.key(reward.currency())).isEmpty()) throw new IllegalArgumentException("Moeda não registrada: "+reward.currency()); }
                 case command -> {

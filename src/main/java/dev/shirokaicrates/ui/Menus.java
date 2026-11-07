@@ -17,7 +17,9 @@ public final class Menus {
     private final CrateService service;
     public Menus(CrateService service) { this.service=service; }
     public static ItemStack icon(String id,String title,String... lines) {
-        ItemStack stack=new ItemStack(Registries.ITEM.get(Identifier.of(id)));
+        return decorate(new ItemStack(Registries.ITEM.get(Identifier.of(id))),title,lines);
+    }
+    private static ItemStack decorate(ItemStack stack,String title,String... lines) {
         stack.set(DataComponentTypes.CUSTOM_NAME,Text.literal(title));
         stack.set(DataComponentTypes.LORE,new LoreComponent(Arrays.stream(lines).map(s->(Text)Text.literal(s)).toList())); return stack;
     }
@@ -25,9 +27,12 @@ public final class Menus {
         return switch(rarity) { case common->Formatting.AQUA; case rare->Formatting.BLUE; case epic->Formatting.LIGHT_PURPLE; case legendary->Formatting.GOLD; case special->Formatting.DARK_PURPLE; };
     }
     public static ItemStack rewardIcon(Reward r,List<Reward> rewards) {
-        ItemStack stack=icon(r.icon(),r.name(),"Raridade: "+r.rarity(),"Quantidade: "+r.count(),
+        ItemStack stack=decorate(rewardBase(r),r.name(),"Raridade: "+r.rarity(),"Quantidade: "+r.count(),
                 "Chance: "+WeightedPicker.percentageText(r,rewards),r.type()==Kind.pokemon?r.properties()+(r.ivs()==null?"":r.ivs().mode().equals("perfect")?" | IVs: "+r.ivs().perfectCount()+" perfeitos garantidos; demais aleatórios":" | IVs aleatórios"):r.type()==Kind.currency?r.currency()+" "+r.amount():"Somente visualização");
         stack.set(DataComponentTypes.CUSTOM_NAME,Text.literal(r.name()).formatted(color(r.rarity()))); return stack;
+    }
+    private static ItemStack rewardBase(Reward reward) {
+        return reward.type()==Kind.pokemon?dev.shirokaicrates.integration.PokemonIcons.icon(reward):new ItemStack(Registries.ITEM.get(Identifier.of(reward.icon())));
     }
     private static void navigation(CrateMenu menu,int page,int size) {
         if(page>0) menu.set(45,icon("minecraft:arrow","§bAnterior"));
@@ -81,7 +86,7 @@ public final class Menus {
             else if(slot<45 && page*45+slot<pending.size())service.claim(player,pending.get(page*45+slot).id());
         }); if(menu==null)return;
         for(int i=0;i<45 && page*45+i<pending.size();i++) {
-            var tx=pending.get(page*45+i); menu.set(i,icon(tx.reward().icon(),"§6"+tx.reward().name(),tx.crateName(),"ID: "+tx.id(),"Estado: "+tx.state(),tx.detail(),"Clique para resgatar; estados incertos exigem revisão administrativa."));
+            var tx=pending.get(page*45+i); menu.set(i,decorate(rewardBase(tx.reward()),"§6"+tx.reward().name(),tx.crateName(),"ID: "+tx.id(),"Estado: "+tx.state(),tx.detail(),"Clique para resgatar; estados incertos exigem revisão administrativa."));
         }
         navigation(menu,page,pending.size());
     }

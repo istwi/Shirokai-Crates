@@ -54,6 +54,14 @@ public final class ShirokaiCrates implements ModInitializer {
             if(hand==Hand.MAIN_HAND && player instanceof ServerPlayerEntity p)try{s.interact(p,hit.getBlockPos());}catch(Exception | LinkageError ex){LOG.error("Interação de crates falhou",ex);}
             return ActionResult.FAIL;
         });
+        AttackBlockCallback.EVENT.addPhaseOrdering(Event.DEFAULT_PHASE,phase);
+        AttackBlockCallback.EVENT.register(phase,(player,world,hand,pos,direction)->{
+            if(world.isClient || !protectedBlock(world,pos))return ActionResult.PASS;
+            var current=service;
+            if(current!=null && hand==Hand.MAIN_HAND && player instanceof ServerPlayerEntity p)
+                try { current.previewBlock(p,pos); } catch(Exception | LinkageError ex) { LOG.error("Prévia do bloco de crate falhou",ex); }
+            return ActionResult.FAIL;
+        });
         PlayerBlockBreakEvents.BEFORE.register((world,player,pos,state,entity)->{return !protectedBlock(world,pos);});
         CommandRegistrationCallback.EVENT.register((dispatcher,registryAccess,environment)->{
             var root=literal("crates").executes(c->run(c.getSource(),p->{if(service.allowed(p,"shirokaicrates.use"))service.menus().crates(p,0);}));

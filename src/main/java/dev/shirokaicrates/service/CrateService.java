@@ -41,6 +41,7 @@ public final class CrateService implements AutoCloseable {
     private final ExecutorService configIo=Executors.newSingleThreadExecutor(Thread.ofPlatform().name("shirokai-config").factory());
     private final Set<UUID> busy=new HashSet<>();
     private final Map<UUID,Session> animations=new HashMap<>();
+    private final Map<UUID,Integer> previewCooldowns=new HashMap<>();
     private int ticks;
     private List<BlockRegistry.Entry> effectBlocks=List.of();
     private int effectCursor;
@@ -134,6 +135,7 @@ public final class CrateService implements AutoCloseable {
         },configIo).whenComplete((candidate,error)->server.execute(()->{
             try {
                 if(error!=null)throw new CompletionException(error);
+                PokemonIcons.clear();
                 // Only registry validation and publication run on the server thread; disk I/O stays on configIo.
                 for(Crate c:candidate.crates().values()) {
                     Rewards.validateItem(c.key().item()); Rewards.validateItem(c.fragment().item());
@@ -156,6 +158,20 @@ public final class CrateService implements AutoCloseable {
                 }
             } finally { reloading=false; }
         }));
+    }
+    public void previewBlock(ServerPlayerEntity player,BlockPos pos) {
+        if(player.isSpectator() || !player.isAlive() || !player.getMainHandStack().isEmpty())return;
+        if(player.getEyePos().squaredDistanceTo(pos.toCenterPos())>Math.pow(active.settings().targetDistance()+1,2))return;
+        if(checkpoints.blocked(player.getUuid()) || busy.contains(player.getUuid()) || !player.currentScreenHandler.getCursorStack().isEmpty())return;
+        var entry=blocks.get(position(player.getWorld(),pos));
+        if(entry==null)return;
+        if(!configurationValid || !active.crates().containsKey(entry.crateId()) || !entry.blockType().equals(Registries.BLOCK.getId(player.getWorld().getBlockState(pos).getBlock()).toString())) {
+            message(player,"unavailable");return;
+        }
+        Integer previous=previewCooldowns.get(player.getUuid());
+        if(previous!=null && ticks-previous<10)return;
+        previewCooldowns.put(player.getUuid(),ticks);
+        menus.preview(player,entry.crateId(),0);
     }
     public void interact(ServerPlayerEntity player,BlockPos pos) {
         var entry=blocks.get(position(player.getWorld(),pos)); if(entry==null)return;
@@ -321,7 +337,7 @@ public final class CrateService implements AutoCloseable {
             } catch(Exception | LinkageError ex) { fail(ex); }
         });
     }
-    public void disconnected(ServerPlayerEntity player) { if(animations.remove(player.getUuid())!=null)busy.remove(player.getUuid()); /* In-flight ledger callbacks release their own locks. */ }
+    public void disconnected(ServerPlayerEntity player) { previewCooldowns.remove(player.getUuid()); if(animations.remove(player.getUuid())!=null)busy.remove(player.getUuid()); /* In-flight ledger callbacks release their own locks. */ }
     public void copyReceipts(ServerPlayerEntity oldPlayer,ServerPlayerEntity newPlayer) { receipts(newPlayer).putAll(receipts(oldPlayer)); }
     public int fragments(ServerPlayerEntity player,Crate crate) {
         int count=0;for(int i=0;i<36;i++)if(tokens.matches(player.getInventory().getStack(i),crate,true))count+=player.getInventory().getStack(i).getCount();return count;
@@ -366,5 +382,5 @@ public final class CrateService implements AutoCloseable {
             }
         }
     }
-    @Override public void close() { animations.clear();busy.clear();configIo.shutdownNow();checkpoints.close();ledger.close(); }
+    @Override public void close() { animations.clear();busy.clear();previewCooldowns.clear();PokemonIcons.clear();configIo.shutdownNow();checkpoints.close();ledger.close(); }
 }
