@@ -16,7 +16,7 @@ public final class Ledger implements AutoCloseable {
     private final Path directory;
     private final ConcurrentHashMap<UUID,Transaction> records=new ConcurrentHashMap<>();
     private final ExecutorService io=Executors.newSingleThreadExecutor(Thread.ofPlatform().name("shirokai-ledger").factory());
-    private volatile boolean healthy=true;
+    private volatile IOException failure;
     public Ledger(Path directory) throws IOException {
         this.directory=directory; Files.createDirectories(directory);
         try(var files=Files.list(directory)) {
@@ -28,7 +28,7 @@ public final class Ledger implements AutoCloseable {
             }
         }
     }
-    public boolean healthy() { return healthy; }
+    public boolean healthy() { return failure==null; }
     public Transaction get(UUID id) { return records.get(id); }
     public List<Transaction> player(UUID player) {
         return records.values().stream().filter(t->t.player().equals(player)).sorted(Comparator.comparing(Transaction::created).reversed()).toList();
@@ -44,11 +44,11 @@ public final class Ledger implements AutoCloseable {
     }
     private void persist(Transaction tx) throws IOException { AtomicFiles.write(directory.resolve(tx.id()+".json"),JSON.toJson(tx)); records.put(tx.id(),tx); }
     public <T> CompletableFuture<T> submit(Callable<T> action) {
-        if(!healthy) return CompletableFuture.failedFuture(new IOException("Persistência bloqueada"));
+        if(!healthy()) return CompletableFuture.failedFuture(new IOException("Persistência bloqueada por uma falha anterior",failure));
         return CompletableFuture.supplyAsync(()->{
-            if(!healthy) throw new CompletionException(new IOException("Persistência bloqueada"));
+            if(!healthy()) throw new CompletionException(new IOException("Persistência bloqueada por uma falha anterior",failure));
             try { return action.call(); }
-            catch(Exception ex) { if(ex instanceof IOException) healthy=false; throw new CompletionException(ex); }
+            catch(Exception ex) { if(ex instanceof IOException ioError) failure=ioError; throw new CompletionException(ex); }
         },io);
     }
     public CompletableFuture<Integer> prune(int days,int maxEntries) {

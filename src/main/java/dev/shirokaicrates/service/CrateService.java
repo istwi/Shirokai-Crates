@@ -80,8 +80,16 @@ public final class CrateService implements AutoCloseable {
     public void tell(ServerPlayerEntity player,String message) { player.sendMessage(Text.literal("✦ Shirokai | "+message),false); }
     private void fail(Throwable error) { ShirokaiCrates.LOG.error("Operação de crates falhou; confira a persistência",error); }
     private <T> void completion(CompletableFuture<T> future,Consumer<T> success,UUID unlock) {
+        completion(future,success,unlock,unlock);
+    }
+    private <T> void completion(CompletableFuture<T> future,Consumer<T> success,UUID unlock,UUID notify) {
         future.whenComplete((result,error)->server.execute(()->{
-            if(error!=null) { fail(error); if(unlock!=null) { busy.remove(unlock); var p=server.getPlayerManager().getPlayer(unlock); if(p!=null)message(p,"storageFailure"); } return; }
+            if(error!=null) {
+                fail(error);
+                if(unlock!=null)busy.remove(unlock);
+                if(notify!=null) { var p=server.getPlayerManager().getPlayer(notify); if(p!=null)message(p,"storageFailure"); }
+                return;
+            }
             try { success.accept(result); }
             catch(Exception | LinkageError ex) { fail(ex); if(unlock!=null)busy.remove(unlock); }
         }));
@@ -93,13 +101,13 @@ public final class CrateService implements AutoCloseable {
         if(state.isAir() || state.isOf(Blocks.MOVING_PISTON) || state.isOf(Blocks.PISTON_HEAD)
                 || state.getBlock() instanceof net.minecraft.block.ChestBlock && state.get(net.minecraft.block.ChestBlock.CHEST_TYPE)!=net.minecraft.block.enums.ChestType.SINGLE) { tell(player,"Bloco incompatível."); return; }
         var entry=new BlockRegistry.Entry(position(player.getWorld(),pos),id,Registries.BLOCK.getId(state.getBlock()).toString());
-        completion(ledger.submit(()->{ blocks.put(entry);return entry; }),saved->tell(player,crate.name()+" registrada com sucesso!"),null);
+        completion(ledger.submit(()->{ blocks.put(entry);return entry; }),saved->tell(player,crate.name()+" registrada com sucesso!"),null,player.getUuid());
     }
     public void remove(ServerPlayerEntity player,BlockPos pos) {
         if(!allowed(player,"shirokaicrates.admin"))return;
         var position=position(player.getWorld(),pos);
         if(blocks.get(position)==null) { tell(player,"Este bloco não está registrado."); return; }
-        completion(ledger.submit(()->{ blocks.remove(position);return true; }),done->tell(player,"Registro removido; o bloco foi preservado."),null);
+        completion(ledger.submit(()->{ blocks.remove(position);return true; }),done->tell(player,"Registro removido; o bloco foi preservado."),null,player.getUuid());
     }
     public void create(ServerPlayerEntity player,String id) {
         if(!allowed(player,"shirokaicrates.admin"))return;

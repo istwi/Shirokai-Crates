@@ -24,7 +24,8 @@ public final class Tokens {
             Files.createDirectories(secretPath.getParent());
             byte[] generated=new byte[32]; new SecureRandom().nextBytes(generated);
             Files.write(secretPath,generated,StandardOpenOption.CREATE_NEW);
-            Files.setPosixFilePermissions(secretPath,java.nio.file.attribute.PosixFilePermissions.fromString("rw-------"));
+            var permissions=Files.getFileAttributeView(secretPath,java.nio.file.attribute.PosixFileAttributeView.class,LinkOption.NOFOLLOW_LINKS);
+            if(permissions!=null)permissions.setPermissions(java.nio.file.attribute.PosixFilePermissions.fromString("rw-------"));
         }
         if(Files.isSymbolicLink(secretPath)) throw new IOException("Secret não pode ser symlink");
         secret=Files.readAllBytes(secretPath);

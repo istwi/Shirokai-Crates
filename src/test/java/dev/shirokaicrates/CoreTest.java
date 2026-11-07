@@ -150,7 +150,12 @@ class CoreTest {
         Path data=temp.resolve("data");
         try(Ledger l=new Ledger(data)) {
             Files.setPosixFilePermissions(data,java.nio.file.attribute.PosixFilePermissions.fromString("r-x------"));
-            try { assertThrows(Exception.class,()->l.create(t).join());assertFalse(l.healthy());assertThrows(Exception.class,()->l.create(t).join()); }
+            try {
+                var original=assertThrows(java.util.concurrent.CompletionException.class,()->l.create(t).join());
+                assertFalse(l.healthy());
+                var blocked=assertThrows(java.util.concurrent.CompletionException.class,()->l.create(t).join());
+                assertSame(original.getCause(),blocked.getCause().getCause(),"Blocked operations retain the original disk error");
+            }
             finally { Files.setPosixFilePermissions(data,java.nio.file.attribute.PosixFilePermissions.fromString("rwx------")); }
         }
     }

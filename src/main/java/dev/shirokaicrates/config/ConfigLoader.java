@@ -46,7 +46,7 @@ public final class ConfigLoader {
             // Atomic link creation fails if target exists, unlike ATOMIC_MOVE's platform-dependent replacement.
             Files.createLink(target, temporary);
         } finally { Files.deleteIfExists(temporary); }
-        try (FileChannel channel = FileChannel.open(directory, StandardOpenOption.READ)) { channel.force(true); }
+        dev.shirokaicrates.storage.AtomicFiles.syncDirectory(directory);
         return target;
     }
     public Snapshot load(Consumer<Reward> rewardValidator, Consumer<String> itemValidator,
