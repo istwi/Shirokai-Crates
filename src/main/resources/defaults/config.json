@@ -1,0 +1,6 @@
+{
+  "maxConcurrent": 32,
+  "historyDays": 90,
+  "maxHistoryEntries": 100000,
+  "targetDistance": 6
+}

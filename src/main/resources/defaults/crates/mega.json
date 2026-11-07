@@ -1,0 +1,61 @@
+{
+  "name": "✦ Caixa Mega",
+  "key": {
+    "item": "minecraft:tripwire_hook",
+    "name": "✦ Chave Mega",
+    "lore": [
+      "Utilize esta chave na Caixa Mega."
+    ]
+  },
+  "fragment": {
+    "item": "minecraft:amethyst_shard",
+    "name": "✦ Fragmento Mega",
+    "lore": [
+      "Converta 4 fragmentos com /crates fragments."
+    ]
+  },
+  "fragmentsRequired": 4,
+  "permission": "shirokaicrates.use",
+  "rewards": [
+    {
+      "name": "Diamantes",
+      "type": "item",
+      "item": "minecraft:diamond",
+      "count": 3,
+      "rarity": "common",
+      "weight": 60
+    },
+    {
+      "name": "Esmeraldas",
+      "type": "item",
+      "item": "minecraft:emerald",
+      "count": 8,
+      "rarity": "rare",
+      "weight": 25
+    },
+    {
+      "name": "Maçã dourada",
+      "type": "item",
+      "item": "minecraft:golden_apple",
+      "count": 1,
+      "rarity": "epic",
+      "weight": 10
+    },
+    {
+      "name": "Estrela do Nether",
+      "type": "item",
+      "item": "minecraft:nether_star",
+      "count": 1,
+      "rarity": "legendary",
+      "weight": 4
+    },
+    {
+      "name": "Netherita",
+      "type": "item",
+      "item": "minecraft:netherite_ingot",
+      "count": 1,
+      "rarity": "special",
+      "weight": 1
+    }
+  ]
+}

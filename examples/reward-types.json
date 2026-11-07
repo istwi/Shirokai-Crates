@@ -1,0 +1,49 @@
+[
+  {
+    "name": "Rayquaza Shiny",
+    "type": "pokemon",
+    "species": "rayquaza",
+    "level": 70,
+    "shiny": true,
+    "nature": "adamant",
+    "hp_iv": 31,
+    "attack_iv": 31,
+    "rarity": "legendary",
+    "weight": 1,
+    "icon": "minecraft:dragon_head"
+  },
+  {
+    "name": "PokéDollars",
+    "type": "currency",
+    "currency": "impactor:dollars",
+    "amount": 1000,
+    "rarity": "rare",
+    "weight": 10,
+    "icon": "minecraft:gold_ingot"
+  },
+  {
+    "name": "PokéTokens",
+    "type": "currency",
+    "currency": "impactor:tokens",
+    "amount": 10,
+    "rarity": "epic",
+    "weight": 2,
+    "icon": "minecraft:emerald"
+  },
+  {
+    "name": "Ultra Balls",
+    "type": "item",
+    "item": "cobblemon:ultra_ball",
+    "count": 8,
+    "rarity": "rare",
+    "weight": 5
+  },
+  {
+    "name": "Aviso",
+    "type": "command",
+    "command": "tell {player} Você ganhou um aviso!",
+    "rarity": "common",
+    "weight": 1,
+    "icon": "minecraft:paper"
+  }
+]

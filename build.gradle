@@ -1,0 +1,47 @@
+plugins {
+    id 'fabric-loom' version '1.9.2'
+    id 'maven-publish'
+}
+version = '0.1.0'
+group = 'dev.shirokaicrates'
+base { archivesName = 'shirokai-crates' }
+repositories {
+    mavenCentral()
+    maven { url = 'https://maven.impactdev.net/repository/development' }
+    maven { url = 'https://artefacts.cobblemon.com/releases' }
+}
+dependencies {
+    minecraft 'com.mojang:minecraft:1.21.1'
+    mappings 'net.fabricmc:yarn:1.21.1+build.3:v2'
+    modImplementation 'net.fabricmc:fabric-loader:0.17.2'
+    modImplementation 'net.fabricmc.fabric-api:fabric-api:0.116.6+1.21.1'
+    modCompileOnly('com.cobblemon:fabric:1.8.3+1.21.1') { transitive = false }
+    compileOnly 'net.luckperms:api:5.4'
+    compileOnly('net.impactdev.impactor.api:economy:5.3.5') { exclude group: 'net.kyori', module: 'event-api' }
+    modCompileOnly 'net.fabricmc:fabric-language-kotlin:1.13.6+kotlin.2.2.20'
+    testImplementation 'com.google.code.gson:gson:2.10.1'
+    testImplementation platform('org.junit:junit-bom:5.11.4')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+java { toolchain.languageVersion = JavaLanguageVersion.of(21); withSourcesJar() }
+tasks.withType(JavaCompile).configureEach { options.release = 21; options.encoding = 'UTF-8' }
+processResources { inputs.property 'version', project.version; filesMatching('fabric.mod.json') { expand version: project.version } }
+test { useJUnitPlatform() }
+
+// Only the local validation server needs these runtime mods; nothing is shaded into the release JAR.
+if (project.hasProperty('integrationRuntime')) {
+    dependencies {
+        modRuntimeOnly('com.cobblemon:fabric:1.8.3+1.21.1') { transitive = false }
+        modRuntimeOnly 'net.fabricmc:fabric-language-kotlin:1.13.6+kotlin.2.2.20'
+    }
+}
+
+// Complete source handoff, including tests, wrapper and operator documentation.
+tasks.register('projectArchive', Zip) {
+    archiveFileName = "shirokai-crates-${project.version}-project.zip"
+    destinationDirectory = layout.buildDirectory.dir('distributions')
+    from(projectDir) {
+        exclude '.git/**', '.gradle/**', 'build/**', 'run/**', '**/node_modules/**', '**/__pycache__/**', '.idea/**', '*.log'
+    }
+}

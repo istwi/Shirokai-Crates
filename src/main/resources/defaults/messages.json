@@ -1,0 +1,12 @@
+{
+  "noKey": "Você precisa da chave desta caixa!",
+  "wrongKey": "Esta chave não pertence a esta caixa!",
+  "unavailable": "Esta caixa está indisponível no momento.",
+  "unknownId": "ID inexistente. Verifique os arquivos JSON carregados.",
+  "permission": "Você não tem permissão.",
+  "busy": "Aguarde a abertura em andamento ou tente novamente em instantes.",
+  "storageFailure": "Novas operações bloqueadas por falha de persistência. Avise a administração.",
+  "pending": "Você possui recompensas pendentes. Use /crates pending.",
+  "uncertain": "A entrega exige revisão administrativa. Seu prêmio permanece registrado.",
+  "announcement": "{player} recebeu {reward} na {crate}! [{rarity}]"
+}

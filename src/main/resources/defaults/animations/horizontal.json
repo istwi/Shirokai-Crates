@@ -1,0 +1,9 @@
+{
+  "durationTicks": 100,
+  "initialInterval": 1,
+  "deceleration": 0.06,
+  "tickSound": "minecraft:block.note_block.hat",
+  "winSound": "minecraft:entity.player.levelup",
+  "highlightItem": "minecraft:gold_ingot",
+  "particles": true
+}

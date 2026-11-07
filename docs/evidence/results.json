@@ -1,0 +1,194 @@
+{
+  "unit": {
+    "tests": 18,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      "reloadKeepsSnapshotAndPhysicalRegistrationsIndependent()",
+      "immutableRewardSurvivesReloadAndLedgerRestart()",
+      "rejectsDuplicateJsonFields()",
+      "oneConcurrentDeliveryWins()",
+      "rejectsFractionalCountsAndZeroWeight()",
+      "idsComeFromFilenamesAndExamplesLoad()",
+      "storageFailureBlocksFurtherWrites()",
+      "weightedDrawMatchesConfiguredDistribution()",
+      "announcementThreshold()",
+      "corruptionIsNotSilentlyDiscarded()",
+      "rejectsTraversalUppercaseAndSymbols()",
+      "independentConcurrentPlayersKeepUniqueTransactions()",
+      "pruningNeverDeletesPendingEntitlements()",
+      "externalUncertaintyRequiresExplicitTransition()",
+      "terminalStatesCannotBeClaimedAgain()",
+      "rejectsInvalidFilenameAndSymlink()",
+      "rejectsExplicitIdAndInvalidWeight()",
+      "atomicFileFailureDoesNotReplaceOriginal()"
+    ]
+  },
+  "connected_suites": {
+    "smoke": [
+      {
+        "name": "login with Cobblemon + Impactor + LuckPerms",
+        "status": "passed"
+      },
+      {
+        "name": "autocomplete uses loaded JSON IDs",
+        "status": "passed"
+      },
+      {
+        "name": "reject missing crate ID",
+        "status": "passed"
+      },
+      {
+        "name": "register looked-at physical block",
+        "status": "passed"
+      },
+      {
+        "name": "several blocks share the filename ID",
+        "status": "passed"
+      },
+      {
+        "name": "reload preserves physical registrations",
+        "status": "passed"
+      },
+      {
+        "name": "invalid reload preserves registrations and active snapshot",
+        "status": "passed"
+      },
+      {
+        "name": "replace one registration only",
+        "status": "passed"
+      },
+      {
+        "name": "remove registration without destroying block",
+        "status": "passed"
+      },
+      {
+        "name": "no key does not open vanilla chest or roulette",
+        "status": "passed"
+      },
+      {
+        "name": "wrong physical key rejected",
+        "status": "passed"
+      },
+      {
+        "name": "renamed unsigned item cannot forge a key",
+        "status": "passed"
+      },
+      {
+        "name": "correct main-hand key starts horizontal roulette",
+        "status": "passed"
+      },
+      {
+        "name": "one key, one result: repeated and offhand interaction",
+        "status": "passed"
+      },
+      {
+        "name": "preview is read-only",
+        "status": "passed"
+      },
+      {
+        "name": "four same fragments convert to one physical key",
+        "status": "passed"
+      },
+      {
+        "name": "registered chest resists a valid-duration mining attempt",
+        "status": "passed"
+      },
+      {
+        "name": "full inventory leaves durable pending reward",
+        "status": "passed"
+      },
+      {
+        "name": "pending reward claimed once",
+        "status": "passed"
+      },
+      {
+        "name": "disconnect preserves the same transaction and reward",
+        "status": "passed"
+      }
+    ],
+    "integration": [
+      {
+        "name": "deliver registered Cobblemon item through Minecraft inventory",
+        "status": "passed"
+      },
+      {
+        "name": "Cobblemon 1.8.3 API accepts persisted Pokémon snapshot",
+        "status": "passed"
+      },
+      {
+        "name": "global announcements only at epic or above",
+        "status": "passed"
+      },
+      {
+        "name": "Impactor 5.3.5 confirms deposit and save: impactor:dollars",
+        "status": "passed"
+      },
+      {
+        "name": "Impactor 5.3.5 confirms deposit and save: impactor:tokens",
+        "status": "passed"
+      },
+      {
+        "name": "configured command reward executes and is journaled",
+        "status": "passed"
+      },
+      {
+        "name": "LuckPerms explicit deny is read without Fabric Permissions API linkage",
+        "status": "passed"
+      }
+    ],
+    "protection": [
+      {
+        "name": "registered movable block is not pushed by powered piston",
+        "status": "passed"
+      },
+      {
+        "name": "real TNT explosion preserves registered chest",
+        "status": "passed"
+      },
+      {
+        "name": "two connected players open the same physical crate concurrently",
+        "status": "passed"
+      }
+    ],
+    "restart-prepare": [
+      {
+        "name": "forced server termination during persisted roulette",
+        "status": "passed"
+      }
+    ],
+    "restart-verify": [
+      {
+        "name": "block registration, consumed key and same prize survive restart",
+        "status": "passed"
+      },
+      {
+        "name": "recovered reward delivered once without another key",
+        "status": "passed"
+      },
+      {
+        "name": "delivered reward cannot be claimed again",
+        "status": "passed"
+      }
+    ],
+    "failure": [
+      {
+        "name": "failed ledger write blocks opening without consuming a key",
+        "status": "passed"
+      },
+      {
+        "name": "player can log in after a critical persistence error",
+        "status": "passed"
+      }
+    ],
+    "automation": [
+      {
+        "name": "hopper cannot extract contents of a registered chest",
+        "status": "passed"
+      }
+    ]
+  },
+  "connected_checks": 37,
+  "total_checks": 55
+}
