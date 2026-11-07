@@ -1,0 +1,44 @@
+name: Publish release
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing version tag to build and publish
+        required: true
+        default: v0.1.0
+permissions:
+  contents: write
+concurrency:
+  group: release-${{ inputs.tag }}
+  cancel-in-progress: false
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Build and test the version tag
+        run: ./gradlew --no-daemon test build projectArchive
+      - name: Attach verified build outputs and publish the draft
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          VERSION="${RELEASE_TAG#v}"
+          JAR="build/libs/shirokai-crates-${VERSION}.jar"
+          SOURCES="build/libs/shirokai-crates-${VERSION}-sources.jar"
+          PROJECT="build/distributions/shirokai-crates-${VERSION}-project.zip"
+          for ASSET in "$JAR" "$SOURCES" "$PROJECT"; do
+            test -s "$ASSET"
+            (cd "$(dirname "$ASSET")" && sha256sum "$(basename "$ASSET")") > "${ASSET}.sha256"
+          done
+          gh release upload "$RELEASE_TAG" "$JAR" "${JAR}.sha256" "$SOURCES" "${SOURCES}.sha256" "$PROJECT" "${PROJECT}.sha256" --repo "$GITHUB_REPOSITORY"
+          gh release edit "$RELEASE_TAG" --draft=false --latest --repo "$GITHUB_REPOSITORY"
