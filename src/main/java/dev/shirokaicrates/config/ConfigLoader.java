@@ -6,6 +6,9 @@ import com.google.gson.stream.JsonToken;
 import dev.shirokaicrates.config.Models.*;
 import java.io.*;
 import java.math.BigDecimal;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.*;
 import java.util.function.Consumer;
@@ -16,6 +19,36 @@ public final class ConfigLoader {
     public static final Pattern ID = Pattern.compile("[a-z0-9_-]{1,64}");
     private final Path root;
     public ConfigLoader(Path root) { this.root = root; }
+    /** Publish a fully written file without replacing an existing file or symlink. */
+    public Path create(String id) throws IOException {
+        if (!ID.matcher(id).matches()) throw new IllegalArgumentException("ID inválido: use 1..64 letras minúsculas, números, _ ou -.");
+        Path directory = root.resolve("crates");
+        if (!Files.isDirectory(directory, LinkOption.NOFOLLOW_LINKS) || Files.isSymbolicLink(directory))
+            throw new IOException("Pasta crates inválida");
+        JsonObject template = JsonParser.parseString("""
+                {"name":"","key":{"item":"minecraft:tripwire_hook","name":"","lore":[]},
+                 "fragment":{"item":"minecraft:amethyst_shard","name":"","lore":["Converta 4 fragmentos com /crates fragments."]},
+                 "fragmentsRequired":4,"permission":"shirokaicrates.use",
+                 "rewards":[{"name":"Diamante de exemplo","type":"item","item":"minecraft:diamond","count":1,"rarity":"common","weight":1}]}
+                """).getAsJsonObject();
+        template.addProperty("name", "Caixa " + id);
+        template.getAsJsonObject("key").addProperty("name", "Chave " + id);
+        template.getAsJsonObject("key").getAsJsonArray("lore").add("Utilize esta chave na Caixa " + id + ".");
+        template.getAsJsonObject("fragment").addProperty("name", "Fragmento " + id);
+        Path target = directory.resolve(id + ".json");
+        Path temporary = Files.createTempFile(directory, ".create-", ".tmp");
+        try {
+            try (FileChannel channel = FileChannel.open(temporary, StandardOpenOption.WRITE)) {
+                ByteBuffer bytes = StandardCharsets.UTF_8.encode(new GsonBuilder().setPrettyPrinting().create().toJson(template) + "\n");
+                while (bytes.hasRemaining()) channel.write(bytes);
+                channel.force(true);
+            }
+            // Atomic link creation fails if target exists, unlike ATOMIC_MOVE's platform-dependent replacement.
+            Files.createLink(target, temporary);
+        } finally { Files.deleteIfExists(temporary); }
+        try (FileChannel channel = FileChannel.open(directory, StandardOpenOption.READ)) { channel.force(true); }
+        return target;
+    }
     public Snapshot load(Consumer<Reward> rewardValidator, Consumer<String> itemValidator,
                          Consumer<String> soundValidator) throws IOException {
         JsonObject global = read(root.resolve("config.json"));

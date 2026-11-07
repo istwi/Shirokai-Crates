@@ -17,14 +17,15 @@ O Shirokai Crates não precisa ser instalado no cliente. O cliente continua prec
 
 ## Instalação
 
-**Arquivo para instalar: `shirokai-crates-0.1.1.jar`.** Não instale `*-sources.jar` nem o ZIP do projeto.
+**Arquivo para instalar: `shirokai-crates-0.1.2.jar`.** Não instale `*-sources.jar` nem o ZIP do projeto.
 
 Para atualizar, pare o servidor, retire de `mods/` os JARs anteriores do Shirokai Crates (inclusive `shirokai-crates-0.1.0-sources.jar`, caso esteja lá) e coloque somente o novo JAR executável. Preserve `config/shirokaicrates/`, o mundo e os dados de jogadores. Não há migração nem redefinição de chaves, registros ou recompensas nesta correção.
 
+A versão 0.1.2 adiciona `/crates create <id>` para gerar caixas editáveis pelo jogo.
 A versão 0.1.1 impede que arquivos de fontes sejam identificados como mods e valida o conteúdo dos JARs durante `build`. Detalhes da causa e da validação estão em [docs/CORRECAO-0.1.1.md](docs/CORRECAO-0.1.1.md).
 
 1. Instale as dependências da tabela no servidor Fabric 1.21.1.
-2. Coloque `build/libs/shirokai-crates-0.1.1.jar` em `mods/`.
+2. Coloque `build/libs/shirokai-crates-0.1.2.jar` em `mods/`.
 3. Inicie o servidor. Na primeira inicialização, os exemplos são criados em `config/shirokaicrates/`.
 4. Edite os JSONs, execute `/crates reload`, coloque um bloco, olhe para ele e execute `/crates setblock shiny1`.
 5. Entregue uma chave com `/crates givekey Jogador shiny1 1`.
@@ -41,6 +42,7 @@ Os comandos abaixo são executados por jogadores. Administradores OP recebem per
 | `/crates preview <id>` | `shirokaicrates.preview` |
 | `/crates fragments` | `shirokaicrates.fragments` |
 | `/crates pending` | `shirokaicrates.pending` |
+| `/crates create <id>` | `shirokaicrates.admin` |
 | `/crates setblock <id>` | `shirokaicrates.admin` |
 | `/crates removeblock` | `shirokaicrates.admin` |
 | `/crates givekey <jogador> <id> <quantidade>` | `shirokaicrates.give` |
@@ -53,6 +55,13 @@ Os comandos abaixo são executados por jogadores. Administradores OP recebem per
 Os quatro nós de consulta/uso são permitidos por padrão quando indefinidos. Cada caixa pode exigir um nó adicional em `permission`. O histórico mostra as últimas 30 entradas do jogador. Comandos com `<id>` sugerem os IDs ativos.
 
 ## Configuração
+
+Para criar uma caixa dentro do jogo, use `/crates create shiny3` como administrador.
+O comando cria `config/shirokaicrates/crates/shiny3.json` e carrega a caixa imediatamente,
+com chave, fragmentos e um diamante de exemplo. Não sobrescreve arquivos existentes.
+Edite nome, itens, descrições e recompensas nesse JSON e aplique com `/crates reload`.
+A chave já fica configurada; para receber o item físico, use `/crates givekey @s shiny3 1`.
+O comando não coloca um bloco: olhe para um bloco existente e use `/crates setblock shiny3`.
 
 ```text
 config/shirokaicrates/

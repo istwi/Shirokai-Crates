@@ -24,6 +24,48 @@ class CoreTest {
         return config;
     }
     Snapshot load(Path config) throws Exception { return new ConfigLoader(config).load(r->{},i->{},s->{}); }
+    @Test void createsEditableCrateWithIndependentKeyAndPersists() throws Exception {
+        Path c=config();
+        Path file=new ConfigLoader(c).create("shiny3");
+        Crate created=load(c).crates().get("shiny3");
+        assertEquals("shiny3",created.keyType());
+        assertEquals("minecraft:tripwire_hook",created.key().item());
+        assertEquals("minecraft:amethyst_shard",created.fragment().item());
+        assertEquals(4,created.fragmentsRequired());
+        assertEquals("minecraft:diamond",created.rewards().getFirst().item());
+        Files.writeString(file,Files.readString(file).replace("minecraft:diamond","minecraft:emerald"));
+        assertEquals("minecraft:emerald",new ConfigLoader(c).load(r->{},i->{},s->{}).crates().get("shiny3").rewards().getFirst().item());
+    }
+    @Test void creationRejectsInvalidIdsAndNeverOverwritesFilesOrSymlinks() throws Exception {
+        Path c=config();ConfigLoader loader=new ConfigLoader(c);
+        for(String id:List.of("../escape","UPPER","", "a".repeat(65)))
+            assertThrows(IllegalArgumentException.class,()->loader.create(id));
+        Path existing=c.resolve("crates/shiny1.json");String original=Files.readString(existing);
+        assertThrows(FileAlreadyExistsException.class,()->loader.create("shiny1"));
+        assertEquals(original,Files.readString(existing));
+        Path link=c.resolve("crates/link.json");Files.createSymbolicLink(link,temp.resolve("absent.json"));
+        assertThrows(FileAlreadyExistsException.class,()->loader.create("link"));
+        Files.delete(link);
+        Path directory=c.resolve("crates");Files.move(directory,c.resolve("saved-crates"));
+        Files.createSymbolicLink(directory,c.resolve("saved-crates"));
+        assertThrows(java.io.IOException.class,()->loader.create("blocked"));
+    }
+    @Test void concurrentCreationPublishesOneCompleteFileWithoutTemporaryFiles() throws Exception {
+        Path c=config();ConfigLoader loader=new ConfigLoader(c);
+        try(var workers=java.util.concurrent.Executors.newFixedThreadPool(8)) {
+            List<java.util.concurrent.Future<Boolean>> attempts=new ArrayList<>();
+            for(int i=0;i<8;i++) attempts.add(workers.submit(()->{
+                try { loader.create("race");return true; }
+                catch(FileAlreadyExistsException expected) { return false; }
+            }));
+            int winners=0;for(var attempt:attempts)if(attempt.get())winners++;
+            assertEquals(1,winners);
+        }
+        assertNotNull(load(c).crates().get("race"));
+        try(var files=Files.list(c.resolve("crates"))) {
+            assertFalse(files.anyMatch(file->file.getFileName().toString().startsWith(".create-")));
+        }
+    }
     @Test void idsComeFromFilenamesAndExamplesLoad() throws Exception {
         Snapshot s=load(config());assertEquals(Set.of("shiny1","shiny2","lendaria","mega","evento_natal"),s.crates().keySet());
         assertEquals("shiny1",s.crates().get("shiny1").id());assertFalse(s.crates().containsKey("missing"));

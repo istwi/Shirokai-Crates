@@ -1,0 +1,136 @@
+{
+  "version": "0.1.2",
+  "junit": {
+    "passed": 24,
+    "failed": 0,
+    "skipped": 0
+  },
+  "functional": [
+    {
+      "name": "command creates JSON with key and fragments",
+      "status": "passed"
+    },
+    {
+      "name": "invalid JSON preserves the active configuration after creation fails to load",
+      "status": "passed"
+    },
+    {
+      "name": "runtime validation failure preserves the active configuration",
+      "status": "passed"
+    },
+    {
+      "name": "loaded crate cannot be silently reset if its JSON was removed",
+      "status": "passed"
+    },
+    {
+      "name": "existing JSON preserved",
+      "status": "passed"
+    },
+    {
+      "name": "invalid ID refused",
+      "status": "passed"
+    },
+    {
+      "name": "physical key available immediately",
+      "status": "passed"
+    },
+    {
+      "name": "physical fragments available immediately",
+      "status": "passed"
+    },
+    {
+      "name": "created key opens registered block and delivers edited reward",
+      "status": "passed"
+    },
+    {
+      "name": "non-administrator cannot create crates",
+      "status": "passed"
+    },
+    {
+      "name": "created crate and edited reward survive server restart",
+      "status": "passed"
+    }
+  ],
+  "smoke": [
+    {
+      "name": "login with Cobblemon + Impactor + LuckPerms",
+      "status": "passed"
+    },
+    {
+      "name": "autocomplete uses loaded JSON IDs",
+      "status": "passed"
+    },
+    {
+      "name": "reject missing crate ID",
+      "status": "passed"
+    },
+    {
+      "name": "register looked-at physical block",
+      "status": "passed"
+    },
+    {
+      "name": "several blocks share the filename ID",
+      "status": "passed"
+    },
+    {
+      "name": "reload preserves physical registrations",
+      "status": "passed"
+    },
+    {
+      "name": "invalid reload preserves registrations and active snapshot",
+      "status": "passed"
+    },
+    {
+      "name": "replace one registration only",
+      "status": "passed"
+    },
+    {
+      "name": "remove registration without destroying block",
+      "status": "passed"
+    },
+    {
+      "name": "no key does not open vanilla chest or roulette",
+      "status": "passed"
+    },
+    {
+      "name": "wrong physical key rejected",
+      "status": "passed"
+    },
+    {
+      "name": "renamed unsigned item cannot forge a key",
+      "status": "passed"
+    },
+    {
+      "name": "correct main-hand key starts horizontal roulette",
+      "status": "passed"
+    },
+    {
+      "name": "one key, one result: repeated and offhand interaction",
+      "status": "passed"
+    },
+    {
+      "name": "preview is read-only",
+      "status": "passed"
+    },
+    {
+      "name": "four same fragments convert to one physical key",
+      "status": "passed"
+    },
+    {
+      "name": "registered chest resists a valid-duration mining attempt",
+      "status": "passed"
+    },
+    {
+      "name": "full inventory leaves durable pending reward",
+      "status": "passed"
+    },
+    {
+      "name": "pending reward claimed once",
+      "status": "passed"
+    },
+    {
+      "name": "disconnect preserves the same transaction and reward",
+      "status": "passed"
+    }
+  ]
+}

@@ -101,22 +101,49 @@ public final class CrateService implements AutoCloseable {
         if(blocks.get(position)==null) { tell(player,"Este bloco não está registrado."); return; }
         completion(ledger.submit(()->{ blocks.remove(position);return true; }),done->tell(player,"Registro removido; o bloco foi preservado."),null);
     }
+    public void create(ServerPlayerEntity player,String id) {
+        if(!allowed(player,"shirokaicrates.admin"))return;
+        if(!ConfigLoader.ID.matcher(id).matches()) { tell(player,"ID inválido: use 1..64 letras minúsculas, números, _ ou -."); return; }
+        if(active.crates().containsKey(id)) { tell(player,"Esta caixa já está carregada; nada foi sobrescrito. Use /crates reload para aplicar alterações."); return; }
+        changeConfiguration(player,id);
+    }
     public void reload(ServerPlayerEntity player) {
         if(!allowed(player,"shirokaicrates.reload"))return;
-        if(reloading)return; reloading=true;
-        CompletableFuture.supplyAsync(()->{try{return loader.load(r->{},id->{},id->{});}catch(IOException ex){throw new CompletionException(ex);}},configIo).whenComplete((candidate,error)->server.execute(()->{
+        changeConfiguration(player,null);
+    }
+    private void changeConfiguration(ServerPlayerEntity player,String createdId) {
+        if(reloading) { tell(player,"Aguarde a operação de configuração terminar."); return; }
+        reloading=true;
+        var fileCreated=new java.util.concurrent.atomic.AtomicBoolean();
+        CompletableFuture.supplyAsync(()->{
+            try {
+                if(createdId!=null) { loader.create(createdId); fileCreated.set(true); }
+                return loader.load(r->{},id->{},id->{});
+            } catch(IOException ex) { throw new CompletionException(ex); }
+        },configIo).whenComplete((candidate,error)->server.execute(()->{
             try {
                 if(error!=null)throw new CompletionException(error);
-                // Validate against live registries on the server thread before the single publication.
+                // Only registry validation and publication run on the server thread; disk I/O stays on configIo.
                 for(Crate c:candidate.crates().values()) {
                     Rewards.validateItem(c.key().item()); Rewards.validateItem(c.fragment().item());
                     for(Reward r:c.rewards()) { Rewards.validateItem(r.icon()); rewards.validate(r); }
                 }
                 Rewards.validateItem(candidate.animation().highlightItem());
                 Rewards.validateSound(candidate.animation().tickSound()); Rewards.validateSound(candidate.animation().winSound());
-                active=candidate; configurationValid=true; tell(player,"Configuração recarregada. Todos os blocos já usam os novos arquivos.");
-            } catch(Exception | LinkageError ex) { ShirokaiCrates.LOG.error("Reload rejeitado; configuração e blocos preservados",ex); tell(player,"Reload rejeitado. Veja o console; a configuração anterior foi preservada."); }
-            finally { reloading=false; }
+                active=candidate; configurationValid=true;
+                if(createdId==null) tell(player,"Configuração recarregada. Todos os blocos já usam os novos arquivos.");
+                else tell(player,"Caixa "+createdId+" criada e carregada com chave e fragmentos. Edite config/shirokaicrates/crates/"+createdId+".json e use /crates reload. Para receber a chave: /crates givekey @s "+createdId+" 1");
+            } catch(Exception | LinkageError ex) {
+                Throwable cause=ex;
+                while(cause instanceof CompletionException && cause.getCause()!=null)cause=cause.getCause();
+                if(cause instanceof FileAlreadyExistsException) tell(player,"Já existe um arquivo para este ID; nada foi sobrescrito.");
+                else {
+                    ShirokaiCrates.LOG.error("Alteração de configuração rejeitada; configuração ativa e blocos preservados",ex);
+                    if(createdId==null) tell(player,"Reload rejeitado. Veja o console; a configuração anterior foi preservada.");
+                    else if(fileCreated.get()) tell(player,"JSON criado, mas o carregamento foi rejeitado. Corrija a configuração e use /crates reload; a configuração ativa foi preservada.");
+                    else tell(player,"Não foi possível criar a caixa. Veja o console; a configuração ativa foi preservada.");
+                }
+            } finally { reloading=false; }
         }));
     }
     public void interact(ServerPlayerEntity player,BlockPos pos) {

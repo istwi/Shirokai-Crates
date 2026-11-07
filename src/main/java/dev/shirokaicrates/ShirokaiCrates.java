@@ -60,6 +60,7 @@ public final class ShirokaiCrates implements ModInitializer {
             root.then(literal("preview").then(argument("id",StringArgumentType.word()).suggests((c,b)->suggest(b)).executes(c->run(c.getSource(),p->service.menus().preview(p,StringArgumentType.getString(c,"id"),0)))));
             root.then(literal("fragments").executes(c->run(c.getSource(),p->service.menus().fragments(p,0))));
             root.then(literal("pending").executes(c->run(c.getSource(),p->service.menus().pending(p,0))));
+            root.then(literal("create").requires(s->permitted(s,"shirokaicrates.admin")).then(argument("id",StringArgumentType.word()).executes(c->run(c.getSource(),p->service.create(p,StringArgumentType.getString(c,"id"))))));
             root.then(literal("setblock").requires(s->permitted(s,"shirokaicrates.admin")).then(argument("id",StringArgumentType.word()).suggests((c,b)->suggest(b)).executes(c->run(c.getSource(),p->{BlockPos pos=target(p);if(pos!=null)service.register(p,pos,StringArgumentType.getString(c,"id"));}))));
             root.then(literal("removeblock").requires(s->permitted(s,"shirokaicrates.admin")).executes(c->run(c.getSource(),p->{BlockPos pos=target(p);if(pos!=null)service.remove(p,pos);})));
             root.then(literal("reload").requires(s->permitted(s,"shirokaicrates.reload")).executes(c->run(c.getSource(),p->service.reload(p))));
