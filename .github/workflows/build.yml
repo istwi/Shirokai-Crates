@@ -20,7 +20,8 @@ jobs:
         with:
           name: shirokai-crates
           path: |
-            build/libs/*.jar
+            build/libs/shirokai-crates-*.jar
+            !build/libs/*-sources.jar
             build/distributions/*.zip
             build/reports/tests/test/
             src/main/resources/defaults/

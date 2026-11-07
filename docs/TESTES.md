@@ -1,6 +1,8 @@
-# Relatório de validação
+# Relatório de validação original — 0.1.0
 
-**55 verificações aprovadas nesta sessão:** 18 testes JUnit e 37 verificações conectadas a um servidor dedicado real. Nenhum teste JUnit falhou, apresentou erro ou foi ignorado no resultado final. O resumo legível por máquina está em [evidence/results.json](evidence/results.json).
+A validação da correção 0.1.1 está em [CORRECAO-0.1.1.md](CORRECAO-0.1.1.md). Os resultados abaixo são históricos da versão 0.1.0; não representam repetição de todas as suítes na versão corrigida.
+
+**55 verificações aprovadas na implementação original:** 18 testes JUnit e 37 verificações conectadas a um servidor dedicado real. Nenhum teste JUnit falhou, apresentou erro ou foi ignorado no resultado final. O resumo legível por máquina está em [evidence/results.json](evidence/results.json).
 
 Servidor validado: Minecraft 1.21.1, Java 21, Fabric Loader 0.17.2, Fabric API 0.116.6+1.21.1, Cobblemon 1.8.3+1.21.1, Kotlin 1.13.6+kotlin.2.2.20, Impactor 5.3.5 e LuckPerms 5.4.140. As versões dos mods de teste foram baixadas dos artefatos oficiais com verificação dos hashes publicados.
 

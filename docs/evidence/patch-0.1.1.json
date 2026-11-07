@@ -1,0 +1,73 @@
+{
+  "version": "0.1.1",
+  "minecraft": "1.21.1",
+  "fabric_loader": "0.20.1",
+  "java": 21,
+  "unit_suites": [
+    {
+      "suite": "dev.shirokaicrates.ArtifactTest",
+      "tests": 3,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "dev.shirokaicrates.CoreTest",
+      "tests": 18,
+      "failures": 0,
+      "skipped": 0
+    }
+  ],
+  "connected_checks": {
+    "prepare": [
+      {
+        "name": "real client login with Fabric Loader 0.20.1",
+        "status": "passed"
+      },
+      {
+        "name": "setblock shiny1 registers a new physical chest",
+        "status": "passed"
+      },
+      {
+        "name": "pre-upgrade physical key opens roulette and consumes exactly one key",
+        "status": "passed"
+      },
+      {
+        "name": "registered chest resists a legitimate mining attempt",
+        "status": "passed"
+      },
+      {
+        "name": "WorldMixin still blocks direct replacement of a registered chest",
+        "status": "passed"
+      },
+      {
+        "name": "disconnect leaves the same persisted opening ready for controlled server restart",
+        "status": "passed"
+      }
+    ],
+    "verify": [
+      {
+        "name": "real client login with Fabric Loader 0.20.1",
+        "status": "passed"
+      },
+      {
+        "name": "physical registrations, key consumption and transaction history persist after restart",
+        "status": "passed"
+      },
+      {
+        "name": "pending reward survives upgrade test restart and is delivered without another key",
+        "status": "passed"
+      },
+      {
+        "name": "physical protected chest remains after restart",
+        "status": "passed"
+      }
+    ]
+  },
+  "original_critical_data_files_unchanged": 39,
+  "all_8_mixin_classes_present": true,
+  "fabric_permissions_api": "0.3.1",
+  "limitations": [
+    "Full original 55-check matrix was not repeated; prior results are historical.",
+    "LuckPerms 5.4.140 raised a scheduler exception when stopping with a client still connected; controlled stop after disconnect completed and restart was verified."
+  ]
+}

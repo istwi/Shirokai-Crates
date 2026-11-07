@@ -2,7 +2,7 @@ plugins {
     id 'fabric-loom' version '1.9.2'
     id 'maven-publish'
 }
-version = '0.1.0'
+version = '0.1.1'
 group = 'dev.shirokaicrates'
 base { archivesName = 'shirokai-crates' }
 repositories {
@@ -13,7 +13,7 @@ repositories {
 dependencies {
     minecraft 'com.mojang:minecraft:1.21.1'
     mappings 'net.fabricmc:yarn:1.21.1+build.3:v2'
-    modImplementation 'net.fabricmc:fabric-loader:0.17.2'
+    modImplementation 'net.fabricmc:fabric-loader:0.20.1'
     modImplementation 'net.fabricmc.fabric-api:fabric-api:0.116.6+1.21.1'
     modCompileOnly('com.cobblemon:fabric:1.8.3+1.21.1') { transitive = false }
     compileOnly 'net.luckperms:api:5.4'
@@ -26,8 +26,28 @@ dependencies {
 }
 java { toolchain.languageVersion = JavaLanguageVersion.of(21); withSourcesJar() }
 tasks.withType(JavaCompile).configureEach { options.release = 21; options.encoding = 'UTF-8' }
-processResources { inputs.property 'version', project.version; filesMatching('fabric.mod.json') { expand version: project.version } }
-test { useJUnitPlatform() }
+processResources {
+    inputs.property 'version', project.version.toString()
+    filteringCharset = 'UTF-8'
+    filesMatching('fabric.mod.json') { expand(version: project.version.toString()) }
+}
+// Loom includes main resources in sourcesJar by default. Source archives must never be loadable mods.
+tasks.named('sourcesJar', Jar) {
+    exclude 'fabric.mod.json', 'shirokaicrates.mixins.json'
+}
+test {
+    useJUnitPlatform()
+    dependsOn tasks.named('remapJar'), tasks.named('remapSourcesJar')
+    def installable = tasks.named('remapJar').flatMap { it.archiveFile }
+    def sources = tasks.named('remapSourcesJar').flatMap { it.archiveFile }
+    inputs.files(installable, sources)
+    systemProperty 'shirokai.expectedVersion', project.version.toString()
+    // Loom finalizes source classifiers after project evaluation; resolve paths at execution time.
+    doFirst {
+        systemProperty 'shirokai.installableJar', tasks.named('remapJar').get().archiveFile.get().asFile.absolutePath
+        systemProperty 'shirokai.sourcesJar', tasks.named('remapSourcesJar').get().archiveFile.get().asFile.absolutePath
+    }
+}
 
 // Only the local validation server needs these runtime mods; nothing is shaded into the release JAR.
 if (project.hasProperty('integrationRuntime')) {

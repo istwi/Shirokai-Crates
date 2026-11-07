@@ -16,7 +16,7 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parent.parent
 os.chdir(ROOT)
-RUN = ROOT / 'run'
+RUN = Path(os.environ.get('SHIROKAI_VALIDATION_DIR', str(ROOT / 'run'))).resolve()
 RUN.mkdir(exist_ok=True)
 CACHE = Path(os.environ.get('GRADLE_USER_HOME', str(Path.home() / '.gradle')))
 JAVA = str(Path(os.environ['JAVA_HOME']) / 'bin/java') if 'JAVA_HOME' in os.environ else shutil.which('java')
@@ -33,7 +33,7 @@ def jar(group, artifact, version):
     return matches[0]
 
 
-loader = jar('net.fabricmc', 'fabric-loader', '0.17.2')
+loader = jar('net.fabricmc', 'fabric-loader', '0.20.1')
 with zipfile.ZipFile(loader) as archive:
     metadata = json.loads(archive.read('fabric-installer.json'))
 classpath = [str(loader)]
@@ -58,7 +58,25 @@ for entry in json.loads((ROOT / 'tests/integration/runtime-mods.json').read_text
         subprocess.run(['curl', '-fsSL', '--max-time', '180', entry['url'], '-o', str(target)], check=True)
     if hashlib.sha512(target.read_bytes()).hexdigest() != entry['sha512']:
         raise RuntimeError(f'Invalid runtime checksum: {target.name}')
-shutil.copy2(ROOT / 'build/libs/shirokai-crates-0.1.0.jar', mods)
+# Read the actual processed version; select the executable JAR, never a sources archive.
+manifest = json.loads((ROOT / 'build/resources/main/fabric.mod.json').read_text())
+installable = ROOT / 'build/libs' / f"shirokai-crates-{manifest['version']}.jar"
+# Replace only verified prior Shirokai executables. Keep worlds, keys, records and other mods untouched.
+for existing in mods.glob('*.jar'):
+    if existing.name == installable.name:
+        continue
+    with zipfile.ZipFile(existing) as archive:
+        if 'fabric.mod.json' not in archive.namelist():
+            continue
+        old = json.loads(archive.read('fabric.mod.json'))
+        if old.get('id') == 'shirokaicrates':
+            backup = RUN / (existing.name + '.disabled')
+            index = 1
+            while backup.exists():
+                backup = RUN / (existing.name + f'.disabled-{index}')
+                index += 1
+            shutil.move(str(existing), str(backup))
+shutil.copy2(installable, mods)
 # Deliberately create local validation settings only if absent. Never overwrite an existing world/config.
 files = {
     'eula.txt': 'eula=true\n',
