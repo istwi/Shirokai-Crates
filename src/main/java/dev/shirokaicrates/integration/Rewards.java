@@ -69,6 +69,14 @@ public final class Rewards {
     public Transaction prepare(ServerPlayerEntity player,Transaction tx) {
         if(tx.reward().type()!=Kind.pokemon)return tx;
         var pokemon=PokemonProperties.Companion.parse(tx.reward().properties()).create(player);
+        if(tx.reward().ivs()!=null) {
+            int[] ivs=dev.shirokaicrates.service.PokemonIvs.roll(tx.reward().ivs(),new java.security.SecureRandom());
+            var stats=new com.cobblemon.mod.common.api.pokemon.stats.Stats[]{
+                com.cobblemon.mod.common.api.pokemon.stats.Stats.HP,com.cobblemon.mod.common.api.pokemon.stats.Stats.ATTACK,
+                com.cobblemon.mod.common.api.pokemon.stats.Stats.DEFENCE,com.cobblemon.mod.common.api.pokemon.stats.Stats.SPECIAL_ATTACK,
+                com.cobblemon.mod.common.api.pokemon.stats.Stats.SPECIAL_DEFENCE,com.cobblemon.mod.common.api.pokemon.stats.Stats.SPEED};
+            for(int i=0;i<6;i++)pokemon.setIV(stats[i],ivs[i]);
+        }
         pokemon.setUuid(UUID.fromString(tx.pokemonUuid()));
         return tx.withPokemon(pokemon.saveToJSON(server.getRegistryManager(),new com.google.gson.JsonObject()).toString());
     }

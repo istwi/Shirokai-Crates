@@ -4,6 +4,6 @@
   "deceleration": 0.06,
   "tickSound": "minecraft:block.note_block.hat",
   "winSound": "minecraft:entity.player.levelup",
-  "highlightItem": "minecraft:gold_ingot",
+  "highlightItem": "minecraft:lime_stained_glass_pane",
   "particles": true
 }

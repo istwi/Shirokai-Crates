@@ -54,7 +54,7 @@ public final class ConfigLoader {
         JsonObject global = read(root.resolve("config.json"));
         Settings settings = new Settings(integer(global,"maxConcurrent",32,1,256),
                 integer(global,"historyDays",90,1,3650), integer(global,"maxHistoryEntries",100000,100,1000000),
-                integer(global,"targetDistance",6,1,16));
+                integer(global,"targetDistance",6,1,16), blockEffects(global));
         JsonObject a = read(root.resolve("animations/horizontal.json"));
         Animation animation = new Animation(integer(a,"durationTicks",100,20,600),
                 integer(a,"initialInterval",1,1,10), decimal(a,"deceleration",0.06,0,1),
@@ -88,7 +88,13 @@ public final class ConfigLoader {
                     for (JsonElement entry : entries) {
                         JsonObject r = entry.getAsJsonObject();
                         Kind type = Kind.valueOf(required(r,"type"));
-                        double weight = decimal(r,"weight",Double.NaN,Double.MIN_VALUE,1e12);
+                        boolean direct = entries.get(0).getAsJsonObject().has("chance");
+                        if (r.has("chance") != direct || (direct && r.has("weight")))
+                            throw new IllegalArgumentException("Use chance em todos os prêmios ou weight em todos, sem misturar");
+                        if (!r.has(direct?"chance":"weight")) throw new IllegalArgumentException("Cada prêmio precisa de chance ou weight");
+                        BigDecimal weight = r.get(direct?"chance":"weight").getAsBigDecimal().stripTrailingZeros();
+                        if (weight.signum()<=0 || weight.scale()>12 || weight.compareTo(new BigDecimal(direct?"100":"1000000000000"))>0)
+                            throw new IllegalArgumentException("Chance/peso deve ser positivo, com até 12 casas decimais e dentro do limite");
                         int count = integer(r,"count",1,1,2304);
                         String item = string(r,"item","");
                         String icon = string(r,"icon",type==Kind.item?item:"minecraft:nether_star");
@@ -97,14 +103,35 @@ public final class ConfigLoader {
                         if (type==Kind.pokemon && properties.isBlank()) {
                             properties = required(r,"species") + " level=" + integer(r,"level",1,1,100)
                                     + " shiny=" + bool(r,"shiny",false);
-                            for (String attribute : List.of("nature","ability","hp_iv","attack_iv","defence_iv","special_attack_iv","special_defence_iv","speed_iv"))
+                            for (String attribute : List.of("nature","ability"))
                                 if (r.has(attribute)) properties += " " + attribute + "=" + r.get(attribute).getAsString();
                         }
+                        IvSettings ivs = null;
+                        if (type==Kind.pokemon) {
+                            List<String> attributes=List.of("hp_iv","attack_iv","defence_iv","special_attack_iv","special_defence_iv","speed_iv");
+                            if (r.has("ivs")) {
+                                JsonObject policy=r.getAsJsonObject("ivs");
+                                if (policy.keySet().stream().anyMatch(k->!Set.of("mode","perfectCount").contains(k)))
+                                    throw new IllegalArgumentException("Campos de ivs aceitos: mode e perfectCount");
+                                String mode=required(policy,"mode");
+                                if (!Set.of("random","perfect").contains(mode)) throw new IllegalArgumentException("ivs.mode deve ser random ou perfect");
+                                int perfect=integer(policy,"perfectCount",mode.equals("perfect")?3:0,0,6);
+                                if (mode.equals("random") && perfect!=0) throw new IllegalArgumentException("perfectCount exige mode perfect");
+                                if (attributes.stream().anyMatch(r::has) || properties.matches("(?is).*\\b(?:ivs|(?:hp|attack|defence|special_attack|special_defence|speed)_iv)\\s*=.*"))
+                                    throw new IllegalArgumentException("Não misture ivs com IVs fixos ou properties com IVs");
+                                ivs=new IvSettings(mode,perfect);
+                            } else {
+                                for (String attribute:attributes) if (r.has(attribute)) {
+                                    if (r.has("properties")) throw new IllegalArgumentException("Defina os IVs em properties ou nos campos individuais, sem misturar");
+                                    properties += " " + attribute + "=" + integer(r,attribute,0,0,31);
+                                }
+                            }
+                        } else if (r.has("ivs")) throw new IllegalArgumentException("ivs só pode ser usado em prêmios pokemon");
                         Reward reward = new Reward(required(r,"name"),type,
                                 Rarity.valueOf(string(r,"rarity","common")),weight,icon,item,count,
                                 r.has("components")?r.get("components").toString():"{}",properties,
                                 string(r,"currency",""),r.has("amount")?r.get("amount").getAsBigDecimal():BigDecimal.ZERO,
-                                string(r,"command",""));
+                                string(r,"command",""),ivs);
                         if (type==Kind.currency && (!Set.of("impactor:dollars","impactor:tokens").contains(reward.currency())
                                 || reward.amount().signum() <= 0 || reward.amount().precision()>30)) throw new IllegalArgumentException("Moeda/quantia inválida");
                         if (type==Kind.command && (reward.command().isBlank() || reward.command().startsWith("/")
@@ -112,6 +139,8 @@ public final class ConfigLoader {
                             throw new IllegalArgumentException("Comando inválido");
                         itemValidator.accept(icon); rewardValidator.accept(reward); rewards.add(reward);
                     }
+                    if (entries.get(0).getAsJsonObject().has("chance") && rewards.stream().map(Reward::weight).reduce(BigDecimal.ZERO,BigDecimal::add).compareTo(new BigDecimal("100"))!=0)
+                        throw new IllegalArgumentException("As chances dos prêmios precisam somar exatamente 100%");
                     Crate crate = new Crate(id,required(json,"name"),keyType,key,fragment,
                             integer(json,"fragmentsRequired",4,2,64),string(json,"permission","shirokaicrates.use"),rewards);
                     if (crates.putIfAbsent(id,crate)!=null) throw new IllegalArgumentException("ID duplicado");
@@ -125,6 +154,13 @@ public final class ConfigLoader {
             if (previous != null && !previous.equals(crate.key())) throw new IOException("Chave compartilhada conflitante: " + crate.keyType());
         }
         return new Snapshot(crates,settings,animation,messages);
+    }
+    private static BlockEffects blockEffects(JsonObject global) {
+        JsonObject e=global.has("crateEffects")?global.getAsJsonObject("crateEffects"):new JsonObject();
+        String particle=string(e,"particle","end_rod");
+        if (!Set.of("end_rod","enchant","happy_villager","flame").contains(particle)) throw new IllegalArgumentException("Partícula de crate inválida");
+        return new BlockEffects(bool(e,"enabled",true),particle,decimal(e,"radius",0.7,0.1,2),decimal(e,"height",1.2,0,3),
+                integer(e,"intervalTicks",5,2,100),integer(e,"viewDistance",32,8,32));
     }
     public static JsonObject read(Path path) throws IOException {
         if (Files.isSymbolicLink(path) || !Files.isRegularFile(path, LinkOption.NOFOLLOW_LINKS) || Files.size(path)>1048576)

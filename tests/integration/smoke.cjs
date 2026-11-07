@@ -51,7 +51,7 @@ async function main(){
  await cmd('crates givekey @s shiny2 1','Itens entregues');await equipKey();const before=records().length;await activate();await sleep(300);assert.equal(records().length,before);ok('wrong physical key rejected');
  await cmd('clear @s');await cmd(`give @s minecraft:tripwire_hook[minecraft:custom_name='{"text":"✦ Chave Shiny I"}'] 1`);await equipKey();await activate();await sleep(200);assert.equal(records().length,before);ok('renamed unsigned item cannot forge a key');
  await cmd('clear @s');await cmd('crates givekey @s shiny1 3','Itens entregues');await wait(()=>count('tripwire_hook')===3);await equipKey();
- const diamondBefore=count('diamond');await activate();await wait(()=>bot.currentWindow);assert.equal(bot.currentWindow.type,'minecraft:generic_9x6');ok('correct main-hand key starts horizontal roulette');
+ const diamondBefore=count('diamond');await activate();await wait(()=>bot.currentWindow);assert.equal(bot.currentWindow.type,'minecraft:generic_9x3');ok('correct main-hand key starts horizontal roulette');
  await activate();bot._client.write('block_place',{hand:1,location:{x:0,y:64,z:2},direction:1,cursorX:.5,cursorY:.5,cursorZ:.5,insideBlock:false,sequence:77});
  await wait(()=>records().some(t=>t.reward.name==='Smoke Diamond'&&t.state==='DELIVERED'),15000);
  await wait(()=>count('diamond')===diamondBefore+3);assert.equal(count('tripwire_hook'),2);assert.equal(records().length,before+1);ok('one key, one result: repeated and offhand interaction');

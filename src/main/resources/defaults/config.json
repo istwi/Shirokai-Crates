@@ -2,5 +2,13 @@
   "maxConcurrent": 32,
   "historyDays": 90,
   "maxHistoryEntries": 100000,
-  "targetDistance": 6
+  "targetDistance": 6,
+  "crateEffects": {
+    "enabled": true,
+    "particle": "end_rod",
+    "radius": 0.7,
+    "height": 1.2,
+    "intervalTicks": 5,
+    "viewDistance": 32
+  }
 }

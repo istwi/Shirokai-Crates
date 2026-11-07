@@ -6,11 +6,13 @@
     "level": 70,
     "shiny": true,
     "nature": "adamant",
-    "hp_iv": 31,
-    "attack_iv": 31,
     "rarity": "legendary",
     "weight": 1,
-    "icon": "minecraft:dragon_head"
+    "icon": "minecraft:dragon_head",
+    "ivs": {
+      "mode": "perfect",
+      "perfectCount": 3
+    }
   },
   {
     "name": "PokéDollars",

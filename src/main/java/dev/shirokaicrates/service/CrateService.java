@@ -42,6 +42,8 @@ public final class CrateService implements AutoCloseable {
     private final Set<UUID> busy=new HashSet<>();
     private final Map<UUID,Session> animations=new HashMap<>();
     private int ticks;
+    private List<BlockRegistry.Entry> effectBlocks=List.of();
+    private int effectCursor;
     private static final class Session {
         final Transaction tx; final Crate crate; final Animation animation; final CrateMenu menu;
         int elapsed=0,next=0;
@@ -52,6 +54,7 @@ public final class CrateService implements AutoCloseable {
         this.server=server; Files.createDirectories(data);
         defaults(config);
         loader=new ConfigLoader(config); blocks=new BlockRegistry(data.resolve("blocks.json"));
+        effectBlocks=List.copyOf(blocks.all());
         ledger=new Ledger(data.resolve("transactions")); tokens=new Tokens(data.resolve("token-secret.bin"));
         rewards=new Rewards(server); menus=new Menus(this);
         try {
@@ -59,7 +62,7 @@ public final class CrateService implements AutoCloseable {
             prune();
         } catch(Exception ex) {
             configurationValid=false;
-            active=new Snapshot(Map.of(),new Settings(32,90,100000,6),new Animation(100,1,0.06,"minecraft:block.note_block.hat","minecraft:entity.player.levelup","minecraft:gold_ingot",true),Map.of());
+            active=new Snapshot(Map.of(),new Settings(32,90,100000,6,BlockEffects.defaults()),new Animation(100,1,0.06,"minecraft:block.note_block.hat","minecraft:entity.player.levelup","minecraft:gold_ingot",true),Map.of());
             ShirokaiCrates.LOG.error("Configuração inicial rejeitada. Registros físicos protegidos; corrija os JSON e use /crates reload.",ex);
         }
     }
@@ -101,13 +104,13 @@ public final class CrateService implements AutoCloseable {
         if(state.isAir() || state.isOf(Blocks.MOVING_PISTON) || state.isOf(Blocks.PISTON_HEAD)
                 || state.getBlock() instanceof net.minecraft.block.ChestBlock && state.get(net.minecraft.block.ChestBlock.CHEST_TYPE)!=net.minecraft.block.enums.ChestType.SINGLE) { tell(player,"Bloco incompatível."); return; }
         var entry=new BlockRegistry.Entry(position(player.getWorld(),pos),id,Registries.BLOCK.getId(state.getBlock()).toString());
-        completion(ledger.submit(()->{ blocks.put(entry);return entry; }),saved->tell(player,crate.name()+" registrada com sucesso!"),null,player.getUuid());
+        completion(ledger.submit(()->{ blocks.put(entry);return entry; }),saved->{effectBlocks=List.copyOf(blocks.all());tell(player,crate.name()+" registrada com sucesso!");},null,player.getUuid());
     }
     public void remove(ServerPlayerEntity player,BlockPos pos) {
         if(!allowed(player,"shirokaicrates.admin"))return;
         var position=position(player.getWorld(),pos);
         if(blocks.get(position)==null) { tell(player,"Este bloco não está registrado."); return; }
-        completion(ledger.submit(()->{ blocks.remove(position);return true; }),done->tell(player,"Registro removido; o bloco foi preservado."),null,player.getUuid());
+        completion(ledger.submit(()->{ blocks.remove(position);return true; }),done->{effectBlocks=List.copyOf(blocks.all());tell(player,"Registro removido; o bloco foi preservado.");},null,player.getUuid());
     }
     public void create(ServerPlayerEntity player,String id) {
         if(!allowed(player,"shirokaicrates.admin"))return;
@@ -172,11 +175,14 @@ public final class CrateService implements AutoCloseable {
             player.getMainHandStack().decrement(1); receipts(player).put(tx.id().toString(),"OPENED");
             checkpoint(player,()->completion(ledger.update(tx.id(),t->t.transition(State.READY,"")),ready->{
                 if(player.isDisconnected()) { busy.remove(player.getUuid());return; }
-                CrateMenu menu=CrateMenu.open(player,"✦ SHIROKAI - CAIXAS",slot->{});
+                CrateMenu menu=CrateMenu.open(player,"✦ SHIROKAI - SORTEIO",3,slot->{});
                 if(menu==null) { deliverLocked(player,ready);return; }
-                menu.set(13,Menus.icon(animation.highlightItem(),"§6▼ PRÊMIO ▼"));
-                menu.set(31,Menus.icon(animation.highlightItem(),"§6▲ PRÊMIO ▲"));
-                animations.put(player.getUuid(),new Session(ready,crate,animation,menu));
+                for(int slot=0;slot<27;slot++)menu.set(slot,Menus.icon("minecraft:gray_stained_glass_pane"," "));
+                menu.set(4,Menus.icon(animation.highlightItem(),"§a▼ PRÊMIO ▼"));
+                menu.set(22,Menus.icon(animation.highlightItem(),"§a▲ PRÊMIO ▲"));
+                Session session=new Session(ready,crate,animation,menu);
+                for(int i=0;i<9;i++) { Reward shown=WeightedPicker.pick(crate.rewards(),random);session.reel.add(shown);menu.set(9+i,Menus.rewardIcon(shown,crate.rewards())); }
+                animations.put(player.getUuid(),session);
             },player.getUuid()));
         },player.getUuid());
     }
@@ -190,6 +196,7 @@ public final class CrateService implements AutoCloseable {
     }
     public void tick() {
         ticks++;
+        blockEffects();
         var iterator=animations.entrySet().iterator();
         while(iterator.hasNext()) {
             var entry=iterator.next(); Session session=entry.getValue(); ServerPlayerEntity player=server.getPlayerManager().getPlayer(entry.getKey());
@@ -197,7 +204,7 @@ public final class CrateService implements AutoCloseable {
             session.elapsed++;
             if(session.elapsed>=session.animation.durationTicks()) {
                 if(player.currentScreenHandler==session.menu) {
-                    session.menu.set(22,Menus.rewardIcon(session.tx.reward(),session.crate.rewards()));
+                    session.menu.set(13,Menus.rewardIcon(session.tx.reward(),session.crate.rewards()));
                     sound(player,session.animation.winSound());
                 }
                 if(session.animation.particles()) player.getServerWorld().spawnParticles(ParticleTypes.FIREWORK,player.getX(),player.getY()+1,player.getZ(),16,0.4,0.5,0.4,0.05);
@@ -206,13 +213,39 @@ public final class CrateService implements AutoCloseable {
             if(session.elapsed>=session.next && player.currentScreenHandler==session.menu) {
                 if(session.reel.isEmpty())for(int i=0;i<9;i++)session.reel.add(WeightedPicker.pick(session.crate.rewards(),random));
                 session.reel.removeFirst();session.reel.add(WeightedPicker.pick(session.crate.rewards(),random));
-                for(int slot=18;slot<=26;slot++) session.menu.set(slot,Menus.rewardIcon(session.reel.get(slot-18),session.crate.rewards()));
+                for(int slot=9;slot<=17;slot++) session.menu.set(slot,Menus.rewardIcon(session.reel.get(slot-9),session.crate.rewards()));
                 sound(player,session.animation.tickSound());
                 double progress=(double)session.elapsed/session.animation.durationTicks();
                 session.next=session.elapsed+Math.min(20,(int)Math.ceil(session.animation.initialInterval()+progress*progress*session.animation.deceleration()*session.animation.durationTicks()));
             }
         }
         if(ticks%72000==0) prune();
+    }
+    private void blockEffects() {
+        BlockEffects effects=active.settings().crateEffects();
+        if(!effects.enabled() || ticks%effects.intervalTicks()!=0 || effectBlocks.isEmpty())return;
+        var particle=switch(effects.particle()) {
+            case "enchant"->ParticleTypes.ENCHANT;case "happy_villager"->ParticleTypes.HAPPY_VILLAGER;
+            case "flame"->ParticleTypes.FLAME;default->ParticleTypes.END_ROD;
+        };
+        int rendered=0;
+        for(int checked=0;checked<Math.min(128,effectBlocks.size()) && rendered<32;checked++) {
+            if(effectCursor>=effectBlocks.size())effectCursor=0;
+            var entry=effectBlocks.get(effectCursor++);var p=entry.position();
+            if(!active.crates().containsKey(entry.crateId()))continue;
+            Identifier dimension=Identifier.tryParse(p.dimension());
+            if(dimension==null)continue;
+            var world=server.getWorld(net.minecraft.registry.RegistryKey.of(net.minecraft.registry.RegistryKeys.WORLD,dimension));
+            BlockPos pos=new BlockPos(p.x(),p.y(),p.z());
+            if(world==null || !world.isChunkLoaded(pos) || !Registries.BLOCK.getId(world.getBlockState(pos).getBlock()).toString().equals(entry.blockType()))continue;
+            if(world.getPlayers().stream().noneMatch(player->player.squaredDistanceTo(p.x()+0.5,p.y()+0.5,p.z()+0.5)<=effects.viewDistance()*effects.viewDistance()))continue;
+            for(int point=0;point<2;point++) {
+                double angle=ticks*0.09+point*Math.PI;
+                world.spawnParticles(particle,p.x()+0.5+Math.cos(angle)*effects.radius(),p.y()+effects.height()+Math.sin(angle*2)*0.15,
+                        p.z()+0.5+Math.sin(angle)*effects.radius(),1,0,0,0,0);
+            }
+            rendered++;
+        }
     }
     private void prune() {
         ledger.prune(active.settings().historyDays(),active.settings().maxHistoryEntries()).whenComplete((removed,error)->server.execute(()->{

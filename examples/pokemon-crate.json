@@ -1,0 +1,48 @@
+{
+  "name": "Caixa Pokémon",
+  "key": {
+    "item": "minecraft:tripwire_hook",
+    "name": "Chave Pokémon",
+    "lore": [
+      "Use esta chave no bloco da Caixa Pokémon."
+    ]
+  },
+  "fragment": {
+    "item": "minecraft:amethyst_shard",
+    "name": "Fragmento Pokémon",
+    "lore": [
+      "Converta 4 fragmentos com /crates fragments."
+    ]
+  },
+  "fragmentsRequired": 4,
+  "permission": "shirokaicrates.use",
+  "rewards": [
+    {
+      "name": "Pikachu",
+      "type": "pokemon",
+      "species": "pikachu",
+      "level": 10,
+      "shiny": false,
+      "rarity": "common",
+      "icon": "minecraft:yellow_dye",
+      "chance": 99.99,
+      "ivs": {
+        "mode": "random"
+      }
+    },
+    {
+      "name": "Rayquaza Shiny — 3 IVs perfeitos",
+      "type": "pokemon",
+      "species": "rayquaza",
+      "level": 70,
+      "shiny": true,
+      "rarity": "legendary",
+      "icon": "minecraft:dragon_head",
+      "chance": 0.01,
+      "ivs": {
+        "mode": "perfect",
+        "perfectCount": 3
+      }
+    }
+  ]
+}
