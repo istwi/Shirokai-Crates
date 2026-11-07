@@ -122,7 +122,7 @@ public final class ConfigLoader {
                                 ivs=new IvSettings(mode,perfect);
                             } else {
                                 for (String attribute:attributes) if (r.has(attribute)) {
-                                    if (r.has("properties")) throw new IllegalArgumentException("Defina os IVs em properties ou nos campos individuais, sem misturar");
+                                    if (!string(r,"properties","").isBlank()) throw new IllegalArgumentException("Defina os IVs em properties ou nos campos individuais, sem misturar");
                                     properties += " " + attribute + "=" + integer(r,attribute,0,0,31);
                                 }
                             }

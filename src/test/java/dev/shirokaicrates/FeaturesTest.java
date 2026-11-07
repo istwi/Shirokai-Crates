@@ -75,6 +75,7 @@ class FeaturesTest {
         String base="{\"name\":\"Pokemon\",\"type\":\"pokemon\",\"species\":\"pikachu\",\"weight\":1,";
         assertEquals(new IvSettings("perfect",3),rewards("["+base+"\"ivs\":{\"mode\":\"perfect\",\"perfectCount\":3}}]").getFirst().ivs());
         assertNull(rewards("["+base+"\"hp_iv\":31}]").getFirst().ivs());
+        assertTrue(rewards("["+base+"\"properties\":\"\",\"hp_iv\":31}]").getFirst().properties().contains("hp_iv=31"));
         for(String fields:List.of("\"ivs\":{\"mode\":\"perfect\",\"perfectCount\":7}","\"ivs\":{\"mode\":\"random\",\"perfectCount\":1}",
                 "\"ivs\":{\"mode\":\"perfect\",\"count\":6}", "\"ivs\":{\"mode\":\"bad\"}","\"hp_iv\":32", "\"hp_iv\":31,\"ivs\":{\"mode\":\"perfect\"}",
                 "\"properties\":\"pikachu hp_iv=31\",\"ivs\":{\"mode\":\"random\"}"))

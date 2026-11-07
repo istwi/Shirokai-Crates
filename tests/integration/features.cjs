@@ -67,7 +67,7 @@ async function main(){
    await wait(()=>records().find(t=>t.id===tx.id)?.state==='DELIVERED',15000);assert.equal(records().find(t=>t.id===tx.id).pokemonJson,tx.pokemonJson);
    if(bot.currentWindow)bot.closeWindow(bot.currentWindow);expected.push({id:tx.id,pokemonJson:tx.pokemonJson});return tx;
   }
-  const perfect=await award({mode:'perfect',perfectCount:3});assert(ivs(perfect).filter(v=>v===31).length>=3);ok('Tyranitar F3 has at least three random perfect stats and retains all IVs across reload');
+  const perfect=await award({mode:'perfect',perfectCount:3});assert(perfect.pokemonJson.includes('tyranitar'));assert(ivs(perfect).filter(v=>v===31).length>=3);ok('Tyranitar F3 has at least three random perfect stats and retains all IVs across reload');
   const random=await award({mode:'random'});assert(ivs(random).every(v=>Number.isInteger(v)&&v>=0&&v<=31));ok('Cobblemon receives six random IVs in the valid range');
   const fixed=await award(null,{hp_iv:31,attack_iv:31});assert.equal(JSON.parse(fixed.pokemonJson).IVs.Base['cobblemon:hp'],31);assert.equal(JSON.parse(fixed.pokemonJson).IVs.Base['cobblemon:attack'],31);ok('legacy fixed IV fields remain compatible');
   fs.writeFileSync(expectedFile,JSON.stringify(expected));
