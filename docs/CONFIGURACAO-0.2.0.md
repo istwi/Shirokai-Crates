@@ -72,7 +72,9 @@ Somente recompensas `type: pokemon` aceitam `ivs`:
 ```
 
 Escolhe três atributos diferentes aleatoriamente e coloca IV **31** neles.
-Os demais recebem valores de 0 a 30: são **exatamente três** IVs perfeitos.
+Os demais recebem valores de 0 a 31: são **pelo menos três** IVs perfeitos.
+Um atributo não garantido também pode sair 31 naturalmente. Os três atributos
+garantidos são sorteados novamente para cada Pokémon, não são sempre HP/ataque/defesa.
 `perfectCount` aceita 0 a 6; se omitido no modo `perfect`, o padrão é 3.
 
 ```json
@@ -95,7 +97,7 @@ Chaves e registros existentes continuam válidos; não apague o segredo do mundo
 ## Exemplo completo
 
 Veja [examples/pokemon-crate.json](../examples/pokemon-crate.json): Pikachu
-com IVs aleatórios (99,99%) e Rayquaza shiny com exatamente três IVs perfeitos
+com IVs aleatórios (99,99%) e Tyranitar F3 com três IVs perfeitos garantidos e demais aleatórios
 (0,01%). Copie para `config/shirokaicrates/crates/pokemon.json`, aplique reload,
 registre um bloco com `/crates setblock pokemon` e entregue a chave com
 `/crates givekey @s pokemon 1`. Também pode criar a caixa com `/crates create pokemon`

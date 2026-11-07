@@ -48,13 +48,23 @@ class FeaturesTest {
         assertSame(r.getFirst(),WeightedPicker.pick(r,ticket(BigInteger.ZERO)));
         assertSame(r.getLast(),WeightedPicker.pick(r,ticket(new BigInteger("99999999999999"))));
     }
-    @Test void perfectIvsHaveExactlyConfiguredCountAcrossAllSixStats() {
+    @Test void perfectIvsGuaranteeConfiguredCountAndAllowNaturalExtras() {
         Random random=new Random(123);
         for(int count=0;count<=6;count++)for(int i=0;i<1000;i++) {
             int[] values=PokemonIvs.roll(new IvSettings("perfect",count),random);
-            assertEquals(count,Arrays.stream(values).filter(v->v==31).count());
+            assertTrue(Arrays.stream(values).filter(v->v==31).count()>=count);
             assertTrue(Arrays.stream(values).allMatch(v->v>=0 && v<=31));
         }
+    }
+    @Test void guaranteedPerfectStatsAreRandomAndRemainingStatsCanNaturallyBePerfect() {
+        Random random=new Random(42);Set<String> combinations=new HashSet<>();boolean extra=false;
+        for(int i=0;i<2000;i++) {
+            int[] values=PokemonIvs.roll(new IvSettings("perfect",3),random);
+            if(Arrays.stream(values).filter(v->v==31).count()>3)extra=true;
+            combinations.add(java.util.stream.IntStream.range(0,6).filter(j->values[j]==31).mapToObj(Integer::toString).collect(java.util.stream.Collectors.joining(",")));
+        }
+        assertTrue(extra,"Non-guaranteed stats still include 31 in their random range");
+        assertTrue(combinations.size()>15,"Guaranteed stats must not always be the same three attributes");
     }
     @Test void randomIvsAllowAllValuesIncludingNaturalPerfectStats() {
         Random random=new Random(19);Set<Integer> observed=new HashSet<>();

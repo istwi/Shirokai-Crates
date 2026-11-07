@@ -26,7 +26,7 @@ public final class Menus {
     }
     public static ItemStack rewardIcon(Reward r,List<Reward> rewards) {
         ItemStack stack=icon(r.icon(),r.name(),"Raridade: "+r.rarity(),"Quantidade: "+r.count(),
-                "Chance: "+WeightedPicker.percentageText(r,rewards),r.type()==Kind.pokemon?r.properties()+(r.ivs()==null?"":r.ivs().mode().equals("perfect")?" | IVs: exatamente "+r.ivs().perfectCount()+" perfeitos":" | IVs aleatórios"):r.type()==Kind.currency?r.currency()+" "+r.amount():"Somente visualização");
+                "Chance: "+WeightedPicker.percentageText(r,rewards),r.type()==Kind.pokemon?r.properties()+(r.ivs()==null?"":r.ivs().mode().equals("perfect")?" | IVs: "+r.ivs().perfectCount()+" perfeitos garantidos; demais aleatórios":" | IVs aleatórios"):r.type()==Kind.currency?r.currency()+" "+r.amount():"Somente visualização");
         stack.set(DataComponentTypes.CUSTOM_NAME,Text.literal(r.name()).formatted(color(r.rarity()))); return stack;
     }
     private static void navigation(CrateMenu menu,int page,int size) {

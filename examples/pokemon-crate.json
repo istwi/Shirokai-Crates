@@ -31,11 +31,11 @@
       }
     },
     {
-      "name": "Rayquaza Shiny — 3 IVs perfeitos",
+      "name": "Tyranitar F3",
       "type": "pokemon",
-      "species": "rayquaza",
+      "species": "tyranitar",
       "level": 70,
-      "shiny": true,
+      "shiny": false,
       "rarity": "legendary",
       "icon": "minecraft:dragon_head",
       "chance": 0.01,

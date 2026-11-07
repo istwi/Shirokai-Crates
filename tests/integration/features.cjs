@@ -60,16 +60,16 @@ async function main(){
   const itemCount=count('diamond');await bot.clickWindow(13,0,1);await sleep(100);assert.equal(count('diamond'),itemCount);ok('roulette display items cannot be taken with shift-click');
   await wait(()=>records().some(t=>!layoutPrevious.has(t.id)&&t.reward.name==='Layout Diamond'&&t.state==='DELIVERED'),15000);assert.equal(bot.currentWindow.slots[13].name,'diamond');ok('final reward appears in the center and is delivered');bot.closeWindow(bot.currentWindow);
   async function award(policy,legacy={}){
-   await cmd('clear @s');writeRewards([{name:'IV '+(policy?policy.mode:'fixed'),type:'pokemon',species:'pikachu',level:10,shiny:true,icon:'minecraft:dragon_head',chance:100,...legacy,...(policy?{ivs:policy}:{})}]);
+   await cmd('clear @s');writeRewards([{name:'IV '+(policy?policy.mode:'fixed'),type:'pokemon',species:'tyranitar',level:10,shiny:true,icon:'minecraft:dragon_head',chance:100,...legacy,...(policy?{ivs:policy}:{})}]);
    await cmd('crates reload','recarregada');await cmd('crates givekey @s features_test 1','Itens entregues');await equipKey();const previous=new Set(records().map(t=>t.id));await activate();
    const tx=await wait(()=>records().find(t=>!previous.has(t.id)&&t.pokemonJson),15000);
-   if(policy?.mode==='perfect') {assert.equal(ivs(tx).filter(v=>v===31).length,policy.perfectCount);writeRewards([{name:'Changed after reservation',type:'item',item:'minecraft:emerald',chance:100}]);await cmd('crates reload','recarregada');}
+   if(policy?.mode==='perfect') {assert(ivs(tx).filter(v=>v===31).length>=policy.perfectCount);writeRewards([{name:'Changed after reservation',type:'item',item:'minecraft:emerald',chance:100}]);await cmd('crates reload','recarregada');}
    await wait(()=>records().find(t=>t.id===tx.id)?.state==='DELIVERED',15000);assert.equal(records().find(t=>t.id===tx.id).pokemonJson,tx.pokemonJson);
    if(bot.currentWindow)bot.closeWindow(bot.currentWindow);expected.push({id:tx.id,pokemonJson:tx.pokemonJson});return tx;
   }
-  const perfect=await award({mode:'perfect',perfectCount:3});assert.equal(ivs(perfect).filter(v=>v===31).length,3);ok('Cobblemon receives exactly three perfect IVs, preserved across reload during roulette');
+  const perfect=await award({mode:'perfect',perfectCount:3});assert(ivs(perfect).filter(v=>v===31).length>=3);ok('Tyranitar F3 has at least three random perfect stats and retains all IVs across reload');
   const random=await award({mode:'random'});assert(ivs(random).every(v=>Number.isInteger(v)&&v>=0&&v<=31));ok('Cobblemon receives six random IVs in the valid range');
-  const fixed=await award(null,{hp_iv:31,attack_iv:31});assert(ivs(fixed).filter(v=>v===31).length>=2);ok('legacy fixed IV fields remain compatible');
+  const fixed=await award(null,{hp_iv:31,attack_iv:31});assert.equal(JSON.parse(fixed.pokemonJson).IVs.Base['cobblemon:hp'],31);assert.equal(JSON.parse(fixed.pokemonJson).IVs.Base['cobblemon:attack'],31);ok('legacy fixed IV fields remain compatible');
   fs.writeFileSync(expectedFile,JSON.stringify(expected));
  } finally {fs.writeFileSync(globalFile,globalOriginal);if(fs.existsSync(config))fs.writeFileSync(config,original);}
  bot.quit();
